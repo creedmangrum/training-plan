@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spartan Beast + Hyrox Training Plan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#0f1117;--surface:#1a1d27;--surface2:#242836;--surface3:#2e3345;
+--text:#e8eaf0;--text2:#9ba3b5;--text3:#6b7280;
+--accent:#6366f1;--accent2:#818cf8;--green:#22c55e;--green-dim:#166534;
+--orange:#f97316;--orange-dim:#7c2d12;--red:#ef4444;--red-dim:#7f1d1d;
+--blue:#3b82f6;--purple:#a855f7;--pink:#ec4899;
+--border:#2e3345;--radius:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.app{max-width:900px;margin:0 auto;padding:16px}
+.header{text-align:center;padding:32px 0 24px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.header h1{font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px}
+.header .subtitle{color:var(--text2);font-size:.875rem}
+.race-badges{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.race-badge{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600}
+.race-badge.spartan{background:var(--orange-dim);color:var(--orange)}
+.race-badge.hyrox{background:var(--red-dim);color:var(--red)}
+.tabs{display:flex;gap:4px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.tab{padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--text3);font-size:.8rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab:hover{color:var(--text2);background:var(--surface)}
+.tab.active{background:var(--accent);color:#fff}
+.phase-bar{display:flex;gap:2px;margin-bottom:20px;border-radius:8px;overflow:hidden;height:6px}
+.phase-seg{flex:1;cursor:pointer;transition:opacity .2s}
+.phase-seg:hover{opacity:.8}
+.phase-seg.base{background:#22c55e}.phase-seg.build{background:#f97316}
+.phase-seg.peak{background:#ef4444}.phase-seg.taper{background:#3b82f6}
+.phase-seg.transition{background:#a855f7}.phase-seg.hyrox-build{background:#ec4899}
+.phase-seg.hyrox-peak{background:#ef4444}.phase-seg.hyrox-taper{background:#3b82f6}
+.phase-seg.active-week{box-shadow:0 0 0 2px #fff;height:10px;margin-top:-2px;border-radius:3px}
+.week-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.week-nav{display:flex;align-items:center;gap:12px}
+.week-nav button{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.week-nav button:hover{background:var(--surface2);border-color:var(--accent)}
+.week-nav button:disabled{opacity:.3;cursor:default}
+.week-info h2{font-size:1.2rem;font-weight:600}
+.phase-tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.7rem;font-weight:600;margin-left:8px;text-transform:uppercase;letter-spacing:.04em}
+.phase-tag.base{background:var(--green-dim);color:var(--green)}
+.phase-tag.build{background:var(--orange-dim);color:var(--orange)}
+.phase-tag.peak{background:var(--red-dim);color:var(--red)}
+.phase-tag.taper{background:rgba(59,130,246,.2);color:var(--blue)}
+.phase-tag.transition{background:rgba(168,85,247,.2);color:var(--purple)}
+.phase-tag.hyrox-build{background:rgba(236,72,153,.2);color:var(--pink)}
+.phase-tag.hyrox-peak{background:var(--red-dim);color:var(--red)}
+.phase-tag.hyrox-taper{background:rgba(59,130,246,.2);color:var(--blue)}
+.week-progress{font-size:.8rem;color:var(--text2)}.week-progress .done{color:var(--green);font-weight:600}
+.week-dates{font-size:.8rem;color:var(--text3);margin-top:2px}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;transition:all .2s}
+.day-card:hover{border-color:var(--surface3)}
+.day-card.completed{opacity:.65}
+.day-card.rest-day{border-left:3px solid var(--surface3)}
+.day-card.hard-day{border-left:3px solid var(--orange)}
+.day-card.race-day{border-left:3px solid var(--red);background:linear-gradient(135deg,var(--surface),var(--red-dim))}
+.day-card.optional{border-style:dashed;border-color:var(--surface3)}
+.day-main{display:flex;align-items:flex-start;padding:12px 16px;cursor:pointer;gap:12px}
+.day-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer}
+.day-check:hover{border-color:var(--accent)}
+.day-card.completed .day-check{background:var(--green);border-color:var(--green)}
+.day-check svg{display:none;width:14px;height:14px}
+.day-card.completed .day-check svg{display:block}
+.day-content{flex:1;min-width:0}
+.day-top{display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap}
+.day-name{font-weight:600;font-size:.9rem}
+.day-type{color:var(--text2);font-size:.8rem}
+.day-meta{display:flex;gap:12px;margin-top:4px;flex-wrap:wrap}
+.day-meta span{font-size:.75rem;color:var(--text3);display:flex;align-items:center;gap:4px}
+.rpe-badge{padding:1px 6px;border-radius:4px;font-size:.7rem;font-weight:600}
+.rpe-low{background:rgba(34,197,94,.15);color:var(--green)}
+.rpe-med{background:rgba(249,115,22,.15);color:var(--orange)}
+.rpe-high{background:rgba(239,68,68,.15);color:var(--red)}
+.day-expand{display:none;padding:0 16px 16px 50px}
+.day-card.expanded .day-expand{display:block}
+.today-indicator{background:var(--accent);color:#fff;font-size:.65rem;padding:1px 6px;border-radius:4px;font-weight:600;margin-left:6px}
+
+/* Workout block formatting */
+.workout-block{margin-bottom:12px;padding:10px 12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--surface3)}
+.workout-block.main-lift{border-left-color:var(--accent)}
+.workout-block.superset{border-left-color:var(--orange)}
+.workout-block.finisher{border-left-color:var(--green)}
+.block-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:700;margin-bottom:4px}
+.block-label.main{color:var(--accent2)}
+.block-label.ss{color:var(--orange)}
+.block-label.fin{color:var(--green)}
+.exercise-line{font-size:.85rem;color:var(--text);padding:3px 0;display:flex;align-items:baseline;gap:6px}
+.exercise-line .ex-name{font-weight:600;color:var(--text)}
+.exercise-line .ex-detail{color:var(--text2);font-size:.8rem}
+.block-note{font-size:.75rem;color:var(--text3);margin-top:4px;font-style:italic}
+.run-detail{font-size:.85rem;color:var(--text);line-height:1.6}
+.warmup-block{margin-bottom:14px;padding:10px 12px;background:rgba(99,102,241,.08);border-radius:8px;border-left:3px solid var(--accent);border:1px dashed var(--accent);border-left:3px solid var(--accent)}
+.warmup-block .block-label{color:var(--accent2);font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.warmup-block .warmup-exercise{font-size:.82rem;color:var(--text2);padding:2px 0}
+.warmup-block .warmup-exercise strong{color:var(--text);font-weight:600}
+.warmup-toggle{font-size:.7rem;color:var(--accent2);cursor:pointer;margin-left:auto;font-weight:500;text-transform:none;letter-spacing:normal}
+.warmup-details{display:none}
+.warmup-block.expanded .warmup-details{display:block}
+
+.detail-section{margin-bottom:10px;margin-top:8px}
+.detail-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:600;margin-bottom:3px}
+.detail-text{font-size:.85rem;color:var(--text);line-height:1.5}
+
+/* Notes section */
+.notes-section{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
+.notes-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent2);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.notes-label svg{width:14px;height:14px}
+.notes-display{font-size:.82rem;color:var(--text2);line-height:1.5;white-space:pre-wrap;padding:8px 10px;background:var(--surface2);border-radius:6px;cursor:pointer;min-height:24px}
+.notes-display:empty::before{content:'Click to add notes...';color:var(--text3);font-style:italic}
+.notes-display .note-stat{color:var(--green);font-weight:600}
+.notes-input{width:100%;min-height:80px;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;color:var(--text);font-size:.82rem;padding:8px 10px;font-family:inherit;line-height:1.5;resize:vertical}
+.notes-input:focus{outline:none;border-color:var(--accent2)}
+.notes-actions{display:flex;gap:6px;margin-top:6px;justify-content:flex-end}
+.notes-actions button{padding:4px 12px;border-radius:6px;border:none;font-size:.75rem;font-weight:600;cursor:pointer}
+.btn-save{background:var(--accent);color:#fff}
+.btn-save:hover{background:var(--accent2)}
+.btn-cancel{background:var(--surface3);color:var(--text2)}
+.btn-cancel:hover{background:var(--border)}
+.has-notes-indicator{width:6px;height:6px;border-radius:50%;background:var(--accent2);display:inline-block;margin-left:4px;vertical-align:middle}
+
+.view{display:none}.view.active{display:block}
+.protocol-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px}
+.protocol-card h3{font-size:1rem;font-weight:600;margin-bottom:8px}
+.protocol-card p,.protocol-card li{font-size:.85rem;color:var(--text2);line-height:1.6}
+.protocol-card ul{padding-left:16px;margin-top:6px}.protocol-card li{margin-bottom:4px}
+.protocol-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.protocol-grid{grid-template-columns:1fr}}
+.bench-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.bench-table th{text-align:left;padding:8px 12px;background:var(--surface2);color:var(--text2);font-weight:600;font-size:.75rem;text-transform:uppercase}
+.bench-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.bench-table tr:hover td{background:var(--surface2)}
+.pace-table{width:100%;border-collapse:collapse;margin-top:12px}
+.pace-table td,.pace-table th{padding:10px 14px;text-align:left;font-size:.85rem;border-bottom:1px solid var(--border)}
+.pace-table th{background:var(--surface2);color:var(--text2);font-weight:600;font-size:.75rem;text-transform:uppercase}
+.pace-table .section-name{font-weight:600}
+@media(max-width:600px){.app{padding:12px}.header h1{font-size:1.2rem}.day-main{padding:10px 12px}.day-expand{padding:0 12px 12px 40px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+<h1>Spartan Beast + Hyrox Training Plan</h1>
+<div class="subtitle">23-Week Periodized Program</div>
+<div class="race-badges">
+<span class="race-badge spartan">Spartan Beast — Snowbasin — Jul 11</span>
+<span class="race-badge hyrox">Hyrox — Salt Lake City — ~Sep 20</span>
+</div>
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="phase-bar" id="phaseBar"></div>
+<div class="view active" id="weekView">
+<div class="week-header">
+<div>
+<div class="week-nav">
+<button id="prevWeek" onclick="changeWeek(-1)">&#8249;</button>
+<div class="week-info"><h2 id="weekTitle"></h2><div class="week-dates" id="weekDates"></div></div>
+<button id="nextWeek" onclick="changeWeek(1)">&#8250;</button>
+</div>
+</div>
+<div class="week-progress" id="weekProgress"></div>
+</div>
+<div id="dayCards"></div>
+</div>
+<div class="view" id="crampView">
+<h2 style="margin-bottom:16px">Anti-Cramp Protocol</h2>
+<div class="protocol-card"><h3>What Happened Last Year</h3><p>Your 2025 Spartan data tells a clear story: cardiovascular fitness was NOT the limiter. By miles 7-8, your HR dropped to the 130s while your pace cratered to 38-40 min/mile — your muscles were shutting down, not your heart. You spent 24% of Q2 above 170bpm with massive climbing, which cooked your quads before the second half.</p></div>
+<div class="protocol-grid">
+<div class="protocol-card"><h3>Eccentric Training</h3><ul><li><strong>Nordic Curls</strong> — 3x6-8, 2-3x/wk, progress to weighted</li><li><strong>Slow Eccentric Squats</strong> — 3x6 with 5-sec lowering @65-70%</li><li><strong>Downhill Running</strong> — 1x/wk, build from 200ft to 800ft+ descent</li><li><strong>Eccentric Calf Raises</strong> — 3x15, 4-sec lowering</li></ul></div>
+<div class="protocol-card"><h3>Electrolyte Protocol</h3><ul><li><strong>Daily</strong> — 1,000-1,500mg sodium (LMNT or similar)</li><li><strong>Night before race</strong> — 1,500-2,000mg sodium loading</li><li><strong>Race morning</strong> — 500-800mg sodium + 16-20oz water</li><li><strong>During race</strong> — Salt cap every 30-40 min, fuel every 45 min</li><li><strong>Aid stations</strong> — Never skip, even in first half</li></ul></div>
+</div>
+<div class="protocol-card" style="margin-top:4px"><h3>Race Day Pacing — Spartan Beast</h3>
+<table class="pace-table"><tr><th>Section</th><th>Strategy</th><th>HR Cap</th></tr>
+<tr><td class="section-name">Miles 1-4</td><td>Controlled power hike climbs, easy jog flats</td><td><strong>155 bpm MAX</strong></td></tr>
+<tr><td class="section-name">Miles 5-7</td><td>Steady power hike, short jog on flats</td><td><strong>160 bpm MAX</strong></td></tr>
+<tr><td class="section-name">Miles 8-10</td><td>Increase effort if legs are solid</td><td>165 bpm</td></tr>
+<tr><td class="section-name">Miles 11-14</td><td>Run strong. Negative split. Pass people.</td><td>Open</td></tr></table></div>
+</div>
+<div class="view" id="benchView">
+<h2 style="margin-bottom:16px">Benchmarks & Progression</h2>
+<table class="bench-table"><thead><tr><th>Test</th><th>Current</th><th>Wk 8</th><th>Pre-Spartan</th><th>Pre-Hyrox</th></tr></thead><tbody>
+<tr><td>Back Squat 1RM</td><td>265 lb</td><td>275 lb</td><td>280 lb</td><td>275 lb</td></tr>
+<tr><td>Deadlift 1RM</td><td>315 lb</td><td>330 lb</td><td>335 lb</td><td>325 lb</td></tr>
+<tr><td>Weighted Pull-ups 4x6</td><td>53 lb</td><td>53 lb</td><td>53 lb</td><td>63 lb</td></tr>
+<tr><td>Max Pull-ups (BW)</td><td>34</td><td>36</td><td>38</td><td>35</td></tr>
+<tr><td>1-Mile Run</td><td>TBD (wk 4)</td><td>Sub 7:00</td><td>Sub 6:45</td><td>Sub 6:30</td></tr>
+<tr><td>5K Time</td><td>TBD</td><td>Sub 23:00</td><td>Sub 22:00</td><td>Sub 21:00</td></tr>
+<tr><td>Rower 1km</td><td>TBD</td><td>Sub 3:40</td><td>Sub 3:30</td><td>Sub 3:25</td></tr>
+<tr><td>Wall Balls unbroken</td><td>TBD</td><td>40+</td><td>50+</td><td>75+</td></tr>
+<tr><td>Farmer Carry 200m</td><td>TBD</td><td>Sub 1:30</td><td>Sub 1:20</td><td>Sub 1:15</td></tr>
+<tr><td>Nordic Curls max</td><td>TBD</td><td>8 full</td><td>10 full</td><td>Maintain</td></tr>
+</tbody></table></div>
+<div class="view" id="equipView">
+<h2 style="margin-bottom:16px">Equipment & Sled Substitutes</h2>
+<div class="protocol-card"><h3>Your Gym</h3><p>Squat rack + barbell, landmine, C2 rower, Rep Pepin adj. DBs (to 125lb), KBs: 30lb, 2x53lb, 72lb, 88lb. Med balls (20lb).</p></div>
+<div class="protocol-card"><h3>Sled Push Substitutes</h3><ul><li><strong>Heavy Goblet Walk (88lb KB)</strong> — 4x50m</li><li><strong>Landmine Press + Wall Sit Combo</strong> — 10 presses then 30sec wall sit, 4 rounds</li></ul></div>
+<div class="protocol-card"><h3>Sled Pull Substitutes</h3><ul><li><strong>Heavy Rower Sprints</strong> — 4x200m at damper 10</li><li><strong>Band Resisted Backward Walk</strong> — 4x50m</li></ul></div>
+<div class="protocol-card"><h3>Ski Erg Substitutes</h3><ul><li><strong>Rower 1km + KB Swings</strong> — Row 1km then 20 heavy swings (88lb), 3 rounds</li><li><strong>Landmine Slams + Rower</strong> — 15 slams then row 500m, 4 rounds</li></ul></div>
+</div>
+</div>
+<script>
+const WEEKS = [{"week": 1, "phase": "base", "phaseLabel": "Spartan Base", "title": "Rebuild Structure", "dates": "Apr 13 - Apr 19, 2026", "focus": "Aerobic base + movement patterns", "days": [{"day": "Monday AM", "name": "Long Run \u2014 Easy", "type": "Run", "detail": "8-9 mi easy trail/road mix. Conversational. Rolling hills, nothing sustained. Focus on form and breathing.", "duration": "1:20-1:30", "targets": "Aerobic base. Stay under 145 HR. Establish Monday long run habit.", "rpe": "5-6", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: foam roll all major groups, 3x10 dead bugs, 3x30sec side plank/side, hip 90/90 stretches, 3x15 bodyweight calf raises", "duration": "30 min", "targets": "Establish mobility routine. Non-negotiable from here on.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Focus", "type": "Strength", "detail": "A1: Back Squat 4x6 @70% (~185lb) \u2014 straight sets, 2-3 min rest\n\nB1: Romanian DL 3x6 @155lb\nB2: Pull-ups 3x10 (bodyweight)\n(Superset \u2014 60sec rest between rounds)\n\nC1: Bulgarian Split Squat 3x8/leg (BW or 30lb KB)\nC2: DB Rows 3x10/arm (60lb)\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curl negatives 3x5 (slow eccentric)\nD2: Goblet Squat 2x12 (53lb KB)", "duration": "55-65 min", "targets": "Re-establish squat patterns. BSS every strength day. Nordics start light \u2014 eccentric only.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Easy Run + Strides", "type": "Run", "detail": "5-6 mi easy with 6x20sec strides in last mile. Flat terrain.", "duration": "45-55 min", "targets": "Easy aerobic. Strides maintain neuromuscular sharpness. <140 HR on easy portions.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Thursday", "name": "Full Body \u2014 Press Focus", "type": "Strength", "detail": "A1: Bench Press 4x6 @70% (~165lb) \u2014 straight sets, 2-3 min rest\n\nB1: Front Squat 3x6 @65% (~160lb)\nB2: Farmer Carry 3x30m (2x53lb KBs)\n(Superset \u2014 60sec rest)\n\nC1: Landmine Reverse Lunge 3x8/leg\nC2: Barbell Rows 3x8 @155lb\n(Superset \u2014 60sec rest)\n\nD1: Eccentric Calf Raises 3x15 (4-sec lower)\nD2: KB Swings 3x12 (53lb)\n\nE1: Nordic Curls 3x6 (eccentric focus)", "duration": "55-65 min", "targets": "Upper base. Carries start light. Eccentric calves begin.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Friday", "name": "Fartlek + Light Circuit", "type": "Run + Circuit", "detail": "AM: 5 mi fartlek \u2014 alternate 2 min moderate/2 min easy. PM: 3 rounds \u2014 Rower 500m, 10 Wall Balls (20lb), 15 KB Swings (53lb), 10 Push-ups. Rest 90sec.", "duration": "Run 45 min + Circuit 25 min", "targets": "Unstructured speed play. Light circuit for work capacity.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Easy Run or Off", "type": "Recovery", "detail": "Optional 30-40 min flat easy jog (<140 HR) or full rest.", "duration": "0-40 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "30 min walk. Foam roll. Optional easy 15 min rower.", "duration": "30 min", "targets": "Full recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 2, "phase": "base", "phaseLabel": "Spartan Base", "title": "Eccentric Loading Intro", "dates": "Apr 20 - Apr 26, 2026", "focus": "Aerobic base + eccentric loading", "days": [{"day": "Monday AM", "name": "Long Trail w/ Downhill", "type": "Run", "detail": "9-10 mi with intentional downhill segments. Route with 400-600 ft elevation. Run downhills controlled \u2014 don't brake hard.", "duration": "1:30-1:45", "targets": "Begin downhill adaptation. Quads will be sore \u2014 that's the point. Practice fueling at mile 5.", "rpe": "6", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: foam roll (extra quads), 3x10 dead bugs, 3x10 bird dogs, hip flexor stretches, 3x15 eccentric calf raises (4-sec)", "duration": "30 min", "targets": "Critical after downhill work.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Focus", "type": "Strength", "detail": "A1: Back Squat 4x5 @75% (~200lb) \u2014 straight sets, 2-3 min rest\n\nB1: Romanian DL 4x8 @165lb (3-sec eccentric)\nB2: Weighted Pull-ups 3x5 (25lb)\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x10/leg (30lb KB)\nC2: Barbell Rows 4x8 @165lb\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curls 3x6 (eccentric focus, progress from Wk 1)\nD2: Goblet Squat 2x10 (53lb KB)", "duration": "60-70 min", "targets": "Eccentric emphasis on RDL. Weighted pull-ups begin. BSS loaded.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Hill Repeats (Intro)", "type": "Run", "detail": "15 min warmup, 6x60sec uphill hard, jog down, 10 min cooldown. ~5-6 mi.", "duration": "45-55 min", "targets": "First structured hills. Power hike the steepest \u2014 practice Spartan cadence.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Grip Work", "type": "Strength", "detail": "20 min: Dead hang 3x max, towel pull-ups 2x max, plate pinch 3x20sec", "duration": "20 min", "targets": "Introduce grip endurance.", "rpe": "4-5", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press Focus", "type": "Strength", "detail": "A1: Bench Press 4x5 @72% (~170lb) \u2014 straight sets, 2-3 min rest\n\nB1: Front Squat 3x5 @70% (~170lb)\nB2: Farmer Carry 3x40m (72+53lb KBs)\n(Superset \u2014 60sec rest)\n\nC1: Landmine Reverse Lunge 3x8/leg\nC2: Weighted Pull-ups 3x5 (15-20lb)\n(Superset \u2014 60sec rest)\n\nD1: Eccentric Calf Raises 3x15 (4-sec)\nD2: KB Swings 3x12 (72lb)\n\nE1: Nordic Curls 3x6 (eccentric focus)", "duration": "60-70 min", "targets": "Heavier carries. Pull-ups on both days now. Eccentric calves continue.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Friday", "name": "Tempo + Conditioning", "type": "Run + Circuit", "detail": "AM: 2 mi easy, 2-3 mi tempo @7:45-8:00/mi, 1.5 mi easy. PM: 4 rounds \u2014 Rower 500m, 12 Wall Balls, 15 KB Swings (72lb), 8 Burpees. Rest 2 min.", "duration": "Run 50 min + Circuit 30 min", "targets": "First tempo effort. Heavier KB in circuit.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Easy Run or Off", "type": "Recovery", "detail": "Optional 30-40 min flat easy jog or rest.", "duration": "0-40 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "30 min walk + foam roll. Easy rower 15-20 min optional.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 3, "phase": "base", "phaseLabel": "Spartan Base", "title": "Volume Push", "dates": "Apr 27 - May 03, 2026", "focus": "Volume build + carries", "days": [{"day": "Monday AM", "name": "Long Trail Run", "type": "Run", "detail": "10-11 mi trail with 600-800 ft elevation. Include 1x 0.25 mi carry with 53lb KB goblet.", "duration": "1:40-1:55", "targets": "Build toward race length. First carry in long run. Fuel every 40 min.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: foam roll, 3x12 dead bugs, 3x12 bird dogs, 3x30sec pallof press, eccentric calf raises", "duration": "30 min", "targets": "Maintain mobility routine.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Focus", "type": "Strength", "detail": "A1: Back Squat 4x5 @77% (~205lb) \u2014 straight sets, 2-3 min rest\n\nB1: Romanian DL 4x8 @175lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x6 @55lb\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x10/leg (53lb KBs)\nC2: Pendlay Rows 4x8 @170lb\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curls 3x6 (reduce assistance)\nD2: Landmine Press 3x8/arm", "duration": "65-75 min", "targets": "BSS heavier. Nordics progressing. Landmine press adds upper pushing volume.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Hill Repeats", "type": "Run", "detail": "15 min warmup, 8x75sec uphill hard, jog down, 10 min cooldown. ~6 mi.", "duration": "55-60 min", "targets": "More reps, longer efforts. HR 155-165 on climbs.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Grip + Carry", "type": "Strength", "detail": "25 min: Dead hang 3x max, farmer carry 3x40m (88+72lb), towel pull-ups 3x max", "duration": "25 min", "targets": "Heavier carries.", "rpe": "5-6", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press Focus", "type": "Strength", "detail": "A1: Bench Press 4x5 @75% (~175lb) \u2014 straight sets, 2-3 min rest\n\nB1: Front Squat 3x5 @72% (~175lb)\nB2: DB Arnold Press 3x10 (50lb)\n(Superset \u2014 90sec rest)\n\nC1: KB Overhead Carry 2x30m/arm (53lb)\nC2: Weighted Pull-ups 4x6 @55lb\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curls 3x6 (eccentric focus)\nD2: Eccentric Calf Raises 3x15\n\nE1: Wall Balls 3x15 (20lb)", "duration": "60-70 min", "targets": "RDL moves to Thursday for spacing from squats. Wall balls climbing.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Friday", "name": "Conditioning + Tempo", "type": "Run + Circuit", "detail": "AM: 5 rounds \u2014 Rower 500m, 15 Wall Balls, 20 KB Swings (72lb), 10 Burpees, 150m Farmer Carry (2x53lb). Rest 2 min. PM: 3.5 mi tempo @7:30-7:45/mi.", "duration": "Circuit 45 min + Run 30 min", "targets": "Highest-volume Friday yet.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Easy Run or Off", "type": "Recovery", "detail": "Optional 30-40 min easy jog or rest.", "duration": "0-40 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + foam roll + optional easy rower.", "duration": "30 min", "targets": "Recovery before deload.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 4, "phase": "base", "phaseLabel": "Spartan Base", "title": "DELOAD + TESTING", "dates": "May 04 - May 10, 2026", "focus": "Recovery + benchmark testing", "days": [{"day": "Monday AM", "name": "Long Run \u2014 Easy", "type": "Run", "detail": "7-8 mi easy familiar route. Conversational.", "duration": "1:05-1:20", "targets": "Reduced volume. Absorb 3 weeks of work.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Monday PM", "name": "Mobility", "type": "Recovery", "detail": "30 min: full foam roll, hip openers, light core", "duration": "30 min", "targets": "Recovery focus.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "TEST DAY \u2014 Lower Benchmarks", "type": "Testing", "detail": "Back Squat \u2014 work to heavy single or 3RM\nFront Squat \u2014 work to heavy single or 3RM\nBulgarian Split Squat 2x8/leg (53lb, easy)\nNordic Curls \u2014 test max full ROM reps\nWeighted Pull-ups \u2014 test max weight for 3 reps", "duration": "50-60 min", "targets": "BENCHMARK: Record squat numbers, Nordic curl max, and pull-up max weight.", "rpe": "Varies", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "1-Mile Time Trial", "type": "Run", "detail": "2 mi warmup, 1-mile all-out, 2 mi cooldown. ~5 mi.", "duration": "35-40 min", "targets": "BENCHMARK: Record 1-mile time.", "rpe": "10", "cat": "h", "optional": false}, {"day": "Thursday", "name": "TEST DAY \u2014 Upper Benchmarks", "type": "Testing", "detail": "Bench Press \u2014 work to heavy single or 3RM\nPull-ups \u2014 test max unbroken (bodyweight)\nRower 1km time trial\nNordic Curls 3x6\nWall Balls \u2014 test max unbroken (20lb) [go outside last]", "duration": "50-60 min", "targets": "BENCHMARK: Record bench, pull-ups, rower 1km, wall ball max.", "rpe": "Varies", "cat": "h", "optional": false}, {"day": "Friday", "name": "Easy Run", "type": "Run", "detail": "4-5 mi flat easy.", "duration": "35-45 min", "targets": "Recovery.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off or Walk", "type": "Recovery", "detail": "Full rest or 20-30 min walk.", "duration": "0-30 min", "targets": "Rest.", "rpe": "1-2", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk, stretch, foam roll. Prep for Build phase.", "duration": "30 min", "targets": "Build phase starts Monday.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 5, "phase": "build", "phaseLabel": "Spartan Build", "title": "Race-Specific Strength", "dates": "May 11 - May 17, 2026", "focus": "Race-specific strength + elevation", "days": [{"day": "Monday AM", "name": "Long Trail w/ Elevation", "type": "Run", "detail": "10-12 mi trail, 1,500-2,000 ft elevation. 2x carry segments: 0.25 mi goblet (72lb) + 0.25 mi farmer (2x53lb).", "duration": "1:45-2:15", "targets": "Practice race nutrition. Power hike >15% grades. Negative-split effort.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: foam roll quads/hams/calves, hip flexors, dead bugs, pallof press, eccentric calf raises", "duration": "30 min", "targets": "Recovery from long run.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Focus", "type": "Strength", "detail": "A1: Back Squat 4x5 @80% (~210lb) \u2014 straight sets, 2-3 min rest\n\nB1: Romanian DL 4x8 @185lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x6 @60lb\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x10/leg (53lb KBs)\nC2: Pendlay Rows 4x8 @175lb\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curls 3x6-8\nD2: Wall Balls 3x20 (20lb)", "duration": "60-75 min", "targets": "Full pull-up working weight now. BSS stays loaded. Nordics progressing.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Hill Repeats", "type": "Run", "detail": "15 min warmup, 8x90sec hard uphill, jog down, 10 min cooldown. ~6-7 mi.", "duration": "55-65 min", "targets": "Sustain 155-165 HR on climbs. Practice race hiking cadence.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Grip + Carry", "type": "Strength", "detail": "30 min: Dead hang 3x max, farmer carry 3x40m (88+72lb), plate pinch 3x30sec, towel pull-ups 3x max", "duration": "30 min", "targets": "Grip endurance.", "rpe": "5-6", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press Focus", "type": "Strength", "detail": "A1: Bench Press 4x5 @78% (~185lb) \u2014 straight sets, 2-3 min rest\n\nB1: Front Squat 3x4 @74% (~180lb)\nB2: Landmine Press 3x10/arm\n(Superset \u2014 90sec rest)\n\nC1: Farmer Carry 4x40m (88+72lb)\nC2: Weighted Pull-ups 3x5 @60lb\n(Superset \u2014 60sec rest)\n\nD1: Eccentric Calf Raises 3x15\nD2: KB Swings 4x15 (72lb)\n\nE1: Nordic Curls 3x6 (eccentric focus)", "duration": "60-70 min", "targets": "Heavy RDL eccentrics. Double pull-up day with carries.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Friday", "name": "Functional Circuit + Tempo", "type": "Run + Circuit", "detail": "AM: 5 rounds \u2014 Rower 500m, 15 Wall Balls, 20 KB Swings (72lb), 10 Burpees, 200m Farmer Carry (2x53lb). Rest 2 min. PM: 3-4 mi tempo @7:15-7:30/mi.", "duration": "Circuit 50-60 min + Run 35 min", "targets": "Hardest day of the week.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Easy or Off", "type": "Recovery", "detail": "Optional 30-45 min easy jog or rest.", "duration": "0-45 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "30-40 min walk. Foam roll, stretch.", "duration": "30-40 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 6, "phase": "build", "phaseLabel": "Spartan Build", "title": "Obstacle Simulation", "dates": "May 18 - May 24, 2026", "focus": "Obstacle simulation + sustained effort", "days": [{"day": "Monday AM", "name": "Long Trail w/ Carries", "type": "Run", "detail": "10-11 mi trail, 1,500+ ft. 3x carry segments: 0.25 mi each (88lb goblet, 2x53lb farmer, 72lb goblet).", "duration": "1:50-2:10", "targets": "Multiple carries simulating race obstacles between running.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: thorough foam roll, dead bugs, pallof press, eccentric calf raises", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Focus", "type": "Strength", "detail": "A1: Back Squat 4x5 @80% (~210lb) \u2014 straight sets, 2-3 min rest\n\nB1: Romanian DL 4x8 @185lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x6 @63lb\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x10/leg (72lb KB goblet)\nC2: Landmine Rows 3x10/arm\n(Superset \u2014 60sec rest)\n\nD1: Eccentric Back Squat 2x5 @70% (4-sec lower)\nD2: Nordic Curls 3x6-8", "duration": "65-75 min", "targets": "Front squat leads for variety. BSS heavier with 72lb. Eccentric squats added.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Hill Power Hikes", "type": "Run", "detail": "45 min steep terrain: alternate 5 min aggressive power hike up / 3 min jog down. ~5-6 mi, 1,000+ ft gain.", "duration": "45-55 min", "targets": "Race-specific climbing. Sustainable power hike cadence.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Grip Circuit", "type": "Strength", "detail": "25 min: Dead hang 3x max, farmer carry 2x50m (88+72lb), KB bottom-up press 2x8/arm (30lb), plate pinch 3x25sec", "duration": "25 min", "targets": "Grip under fatigue.", "rpe": "5-6", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press + Posterior", "type": "Strength", "detail": "A1: Bench Press 4x5 @78% (~185lb) \u2014 straight sets, 2-3 min rest\n\nB1: Front Squat 3x5 @75% (~185lb)\nB2: Weighted Pull-ups 3x6 @63lb\n(Superset \u2014 90sec rest)\n\nC1: Goblet Carry 3x50m (88lb KB)\nC2: DB Incline Press 3x10 (75lb)\n(Superset \u2014 90sec rest)\n\nD1: Nordic Curls 3x6 (eccentric focus)\nD2: Eccentric Calf Raises 3x15\n\nE1: Wall Balls 3x25 (20lb)", "duration": "60-70 min", "targets": "88lb goblet carry simulates sandbag. Wall ball volume climbing.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Friday", "name": "Race Sim Circuit + Tempo", "type": "Run + Circuit", "detail": "AM: 4 rounds \u2014 Rower 500m, 20 Wall Balls, 20 KB Swings (88lb), 12 Burpees, 200m Farmer Carry (88+72lb), 8 Pull-ups. Rest 2 min. PM: 3.5 mi tempo @7:15-7:30/mi.", "duration": "Circuit 55 min + Run 30 min", "targets": "Heavier everything. Full obstacle simulation.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Easy or Off", "type": "Recovery", "detail": "Optional 30 min easy jog or rest.", "duration": "0-30 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + foam roll + easy rower.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 7, "phase": "build", "phaseLabel": "Spartan Build", "title": "Peak Build Volume", "dates": "May 25 - May 31, 2026", "focus": "Peak volume approach", "days": [{"day": "Monday AM", "name": "Long Trail \u2014 Biggest", "type": "Run", "detail": "12-13 mi trail, 2,000+ ft elevation. 2x carry segments. Full race nutrition every 35-40 min.", "duration": "2:00-2:30", "targets": "Longest build run. Full nutrition protocol. Power hike sustained climbs.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: full foam roll, all cramp-prone areas, eccentric calf raises", "duration": "30 min", "targets": "Critical recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Heavy", "type": "Strength", "detail": "A1: Back Squat 4x4 @82% (~215lb) \u2014 straight sets, 2.5-3 min rest\n\nB1: Romanian DL 4x8 @190lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x6 @65lb\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x12/leg (53lb KBs) \u2014 higher reps this week\nC2: Pendlay Rows 4x6 @180lb\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curls 3x8\nD2: Walking Lunges 2x20 steps (2x53lb KBs)", "duration": "70-80 min", "targets": "Highest volume lower+upper session. BSS higher reps. Walking lunges for Hyrox preview.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Hill Sprint Repeats", "type": "Run", "detail": "15 min warmup, 10x60sec ALL OUT uphill, walk down, 10 min cooldown. ~5-6 mi.", "duration": "50-60 min", "targets": "Max power on hills.", "rpe": "9", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Grip + Carry", "type": "Strength", "detail": "20 min: Dead hang 3x max, farmer carry 2x50m (88+72lb unbroken), towel pull-ups 2x max", "duration": "20 min", "targets": "Push for unbroken carries.", "rpe": "6", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press + Power", "type": "Strength", "detail": "A1: Bench Press 4x4 @80% (~190lb) \u2014 straight sets, 2.5-3 min rest\n\nB1: Front Squat 3x4 @75% (~185lb)\nB2: DB Arnold Press 3x10 (55lb)\n(Superset \u2014 90sec rest)\n\nC1: Weighted Pull-ups 5x5 @65lb\nC2: KB Overhead Carry 2x40m/arm (53lb)\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curls 3x6 (eccentric focus)\nD2: KB Swings 4x15 (88lb)\n\nE1: Wall Balls 4x20 (20lb)", "duration": "65-75 min", "targets": "Heaviest KB swings. Higher pull-up volume. Wall balls building.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Friday", "name": "Peak Circuit + Tempo", "type": "Run + Circuit", "detail": "AM: 5 rounds \u2014 Rower 500m hard, 20 Wall Balls, 25 KB Swings (88lb), 10 Burpee Broad Jumps, 200m Farmer Carry (88+72lb). Rest 90sec. PM: 4 mi tempo @7:00-7:15/mi.", "duration": "Circuit 55 min + Run 35 min", "targets": "Hardest Friday of the build.", "rpe": "9", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "You earned it.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + full mobility.", "duration": "30 min", "targets": "Recovery before deload.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 8, "phase": "build", "phaseLabel": "Spartan Build", "title": "DELOAD", "dates": "Jun 01 - Jun 07, 2026", "focus": "Recovery", "days": [{"day": "Monday AM", "name": "Easy Long Run", "type": "Run", "detail": "8-9 mi easy, mix of trail/road. Conversational.", "duration": "1:15-1:30", "targets": "Reduced volume. Let adaptations settle.", "rpe": "5", "cat": "r", "optional": false}, {"day": "Monday PM", "name": "Mobility", "type": "Recovery", "detail": "30 min: full foam roll + stretch", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Light", "type": "Strength", "detail": "A1: Back Squat 3x4 @75% (~200lb)\n\nB1: Light RDL 3x8 @155lb\nB2: Pull-ups 3x8 (bodyweight)\n(Superset)\n\nC1: Bulgarian Split Squat 2x8/leg (30lb)\nC2: Light Rows 3x8\n(Superset)\n\nD1: Nordic Curls 2x6\nD2: Light KB Swings 3x10 (53lb)", "duration": "45-50 min", "targets": "Touch all movements. No grinding.", "rpe": "5-6", "cat": "r", "optional": false}, {"day": "Wednesday", "name": "Easy Run + Strides", "type": "Run", "detail": "5 mi easy with 4x20sec strides.", "duration": "40-45 min", "targets": "Stay sharp.", "rpe": "4", "cat": "r", "optional": false}, {"day": "Thursday", "name": "Full Body \u2014 Light", "type": "Strength", "detail": "A1: Bench Press 3x4 @75% (~175lb)\n\nB1: Front Squat 2x4 @70% (~170lb)\nB2: Weighted Pull-ups 3x5 @45lb\n(Superset)\n\nC1: Farmer Carry 2x30m (2x53lb)\nC2: Nordic Curls 3x6\n\nE1: Wall Balls 2x10 [go outside last]", "duration": "35-40 min", "targets": "Light. Maintenance.", "rpe": "5", "cat": "r", "optional": false}, {"day": "Friday", "name": "Easy Run", "type": "Run", "detail": "4-5 mi easy.", "duration": "35-40 min", "targets": "Prep for peak.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "Rest.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk, stretch, foam roll.", "duration": "30 min", "targets": "Peak phase Monday.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 9, "phase": "peak", "phaseLabel": "Spartan Peak", "title": "Race Simulation", "dates": "Jun 08 - Jun 14, 2026", "focus": "Race simulation + maintain strength", "days": [{"day": "Monday AM", "name": "Race Sim Long Trail", "type": "Run", "detail": "12-13 mi trail, 2,000-2,500 ft. 3x carry segments (72lb goblet, 2x53lb farmer, 30lb overhead). Full nutrition every 35 min.", "duration": "2:15-2:45", "targets": "Closest race sim. Easy first half, stronger second. HR cap 155 first hour.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: thorough foam roll, hip flexors, calves, quads, dead bugs, eccentric calf raises", "duration": "30 min", "targets": "Don't skip after sim runs.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Maintain", "type": "Strength", "detail": "A1: Back Squat 3x4 @82% (~215lb) \u2014 straight sets, 2.5 min rest\n\nB1: Romanian DL 4x6 @190lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x5 @70lb\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x8/leg (53lb KBs)\nC2: Barbell Rows 4x8 @175lb\n(Superset \u2014 60sec rest)\n\nD1: Eccentric Squat 2x5 @70% (5-sec lower)\nD2: Wall Balls 3x25", "duration": "55-65 min", "targets": "Maintain strength. Eccentrics are cramp insurance.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Threshold Intervals", "type": "Run", "detail": "15 min warmup, 5x5min at threshold (8:00-8:30/mi), 2 min jog, 10 min cooldown. ~7-8 mi.", "duration": "60-70 min", "targets": "Race-pace running between obstacles.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Obstacle Grip Circuit", "type": "Strength", "detail": "25 min: Towel pull-ups 3x max, dead hang 3x max, farmer carry 2x50m (88+72lb), plate pinch 3x30sec", "duration": "25 min", "targets": "Grip must be bulletproof.", "rpe": "6", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press + Power", "type": "Strength", "detail": "A1: Bench Press 3x4 @80% (~190lb) \u2014 straight sets, 2.5 min rest\n\nB1: Front Squat 3x4 @75% (~185lb)\nB2: Weighted Pull-ups 3x5 @70lb\n(Superset \u2014 90sec rest)\n\nC1: Landmine Reverse Lunge 3x8/leg\nC2: Landmine Press 3x8/arm\n(Superset \u2014 60sec rest)\n\nD1: Nordic Curls 3x8\nD2: Eccentric Calf Raises 3x15", "duration": "55-65 min", "targets": "Heavy KB swings for hip power. Nordics maintained.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Friday", "name": "Obstacle Circuit + Tempo", "type": "Run + Circuit", "detail": "AM: 4 rounds \u2014 Rower 500m, 20 Wall Balls, 25 KB Swings (72lb), 12 Burpees, 200m Farmer Carry (2x53lb), 10 Pull-ups. Rest 2 min. PM: 3 mi tempo @7:15-7:30/mi.", "duration": "Circuit 50 min + Run 25 min", "targets": "Simulate running between obstacle clusters.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Easy or Off", "type": "Recovery", "detail": "Optional 30 min easy jog or rest.", "duration": "0-30 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + full mobility.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 10, "phase": "peak", "phaseLabel": "Spartan Peak", "title": "Highest Intensity", "dates": "Jun 15 - Jun 21, 2026", "focus": "Peak training stress", "days": [{"day": "Monday AM", "name": "Long Trail \u2014 Hard", "type": "Run", "detail": "11-12 mi trail, 2,000+ ft. Moderate-hard \u2014 simulate racing. Power hike aggressively, run hard flats/downs. 53lb goblet carry 0.5 mi total.", "duration": "1:50-2:15", "targets": "Hardest long run. Surge after climbs. Full nutrition.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: full foam roll, hip flexors, calves, quads", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Power", "type": "Strength", "detail": "A1: Back Squat 3x3 @85% (~225lb) \u2014 straight sets, 3 min rest\n\nB1: Romanian DL 3x6 @185lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x5 @73lb\n(Superset \u2014 2 min rest)\n\nC1: Bulgarian Split Squat 3x8/leg (53lb, explosive up)\nC2: Pendlay Rows 4x5 @185lb\n(Superset \u2014 60sec rest)\n\nD1: Box Jumps 4x5\nD2: Nordic Curls 3x6-8", "duration": "60-70 min", "targets": "Heaviest squats of peak. BSS explosive concentric. Power emphasis.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Hill Sprint Repeats", "type": "Run", "detail": "15 min warmup, 10x45sec ALL OUT uphill, walk down, 10 min cooldown. ~5-6 mi.", "duration": "50-60 min", "targets": "Max effort climbs.", "rpe": "9", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Grip + Carry", "type": "Strength", "detail": "20 min: Dead hang 2x max, farmer carry 2x50m (88+72lb), towel pull-ups 2x max", "duration": "20 min", "targets": "Short and sharp.", "rpe": "5-6", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Maintain", "type": "Strength", "detail": "A1: Bench Press 3x4 @78% (~185lb) \u2014 straight sets\n\nB1: Front Squat 3x3 @78% (~190lb)\nB2: DB Rows 3x10/arm (75lb)\n(Superset \u2014 90sec rest)\n\nC1: Farmer Carry 2x50m (88+72lb)\nC2: Pull-ups 3x max (bodyweight)\n(Superset)\n\nD1: Nordic Curls 3x6 (eccentric focus)\nD2: KB Swings 3x12 (72lb)\n\nE1: Wall Balls 2x20", "duration": "50-60 min", "targets": "Slightly reduced volume. Don't dig a hole.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Friday", "name": "Peak Circuit + Tempo", "type": "Run + Circuit", "detail": "AM: 5 rounds \u2014 Rower 500m hard, 15 Wall Balls, 20 KB Swings (88lb), 8 Burpee Broad Jumps, 200m Farmer Carry (88+72lb). Rest 90sec. PM: 3.5 mi tempo @7:00-7:15/mi.", "duration": "Circuit 55 min + Run 30 min", "targets": "Peak intensity.", "rpe": "9", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "Prioritize sleep.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + full mobility.", "duration": "30 min", "targets": "Absorb training.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 11, "phase": "peak", "phaseLabel": "Spartan Peak", "title": "Sharpening", "dates": "Jun 22 - Jun 28, 2026", "focus": "Reduce volume, maintain intensity", "days": [{"day": "Monday AM", "name": "Long Trail \u2014 Moderate", "type": "Run", "detail": "10-11 mi trail, 1,500-1,800 ft. Moderate \u2014 strong but controlled. 1x carry (53lb, 0.25 mi). Full nutrition.", "duration": "1:40-2:00", "targets": "Volume down. Feel smooth and efficient.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: full mobility, light core", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Reduced Volume", "type": "Strength", "detail": "A1: Back Squat 3x3 @80% (~210lb) \u2014 straight sets\n\nB1: Romanian DL 3x5 @185lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x5 @75lb\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x8/leg (53lb)\nC2: Barbell Rows 3x6 @175lb\n(Superset)\n\nD1: Nordic Curls 3x6\nD2: KB Swings 3x12 (72lb)", "duration": "50-55 min", "targets": "Same intensity, less volume. Shed fatigue.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Speed Work", "type": "Run", "detail": "15 min warmup, 6x400m at mile race pace, 90sec jog, 10 min cooldown. ~5 mi.", "duration": "40-45 min", "targets": "Short, fast, crisp.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Thursday", "name": "Full Body \u2014 Reduced Volume", "type": "Strength", "detail": "A1: Bench Press 3x3 @78% (~185lb) \u2014 straight sets\n\nB1: Front Squat 2x3 @75% (~185lb)\nB2: Weighted Pull-ups 3x4 @75lb\n(Superset)\n\nC1: Farmer Carry 2x40m (88+72lb)\nC2: Nordic Curls 3x6 (eccentric focus)\n(Superset)\n\nD1: Eccentric Calf Raises 2x15\nD2: Light KB Swings 2x10 (53lb)\n\nE1: Wall Balls 2x15", "duration": "40-45 min", "targets": "Maintenance. Getting fresher.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Friday", "name": "Moderate Circuit + Easy Run", "type": "Run + Circuit", "detail": "AM: 3 rounds \u2014 Rower 500m, 12 Wall Balls, 15 KB Swings (72lb), 8 Burpees, 150m Carry (2x53lb). Rest 2 min. PM: 3 mi easy.", "duration": "Circuit 35 min + Run 25 min", "targets": "Reduced rounds. Patterns sharp.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Off or Walk", "type": "Recovery", "detail": "Rest or 20 min walk.", "duration": "0-20 min", "targets": "Rest.", "rpe": "1-2", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + foam roll.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 12, "phase": "taper", "phaseLabel": "Spartan Taper", "title": "Volume Drop", "dates": "Jun 29 - Jul 05, 2026", "focus": "Volume drop, keep intensity", "days": [{"day": "Monday AM", "name": "Easy Trail", "type": "Run", "detail": "7-8 mi easy trail, 800-1,000 ft. Conversational. No carries.", "duration": "1:10-1:25", "targets": "Not a hard run. Practice nutrition one last time.", "rpe": "5", "cat": "r", "optional": false}, {"day": "Monday PM", "name": "Mobility", "type": "Recovery", "detail": "25 min: foam roll, hip flexors, calves", "duration": "25 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Light", "type": "Strength", "detail": "A1: Back Squat 3x3 @75% (~200lb)\n\nB1: Light RDL 3x6 @155lb\nB2: Weighted Pull-ups 3x4 @50lb\n(Superset)\n\nC1: Bulgarian Split Squat 2x8/leg (30lb)\nC2: Light Rows 2x8\n(Superset)\n\nD1: Nordic Curls 2x6\nD2: Wall Balls 2x10", "duration": "40-45 min", "targets": "Stay sharp without soreness.", "rpe": "5-6", "cat": "r", "optional": false}, {"day": "Wednesday", "name": "Short Tempo", "type": "Run", "detail": "1.5 mi warmup, 2 mi tempo (7:15-7:30/mi), 1.5 mi cooldown. ~5 mi.", "duration": "40-45 min", "targets": "Keep engine tuned.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Thursday", "name": "Full Body \u2014 Light", "type": "Strength", "detail": "A1: Bench Press 2x3 @75% (~175lb)\n\nB1: Front Squat 2x3 @70% (~170lb)\nB2: Pull-ups 2x8 (BW)\n(Superset)\n\nC1: Light KB Swings 3x10 (53lb)\nC2: Eccentric Calf Raises 2x12\nNordic Curls 3x6 (eccentric focus)", "duration": "30-35 min", "targets": "Light weight, low volume.", "rpe": "5", "cat": "r", "optional": false}, {"day": "Friday", "name": "Easy + Strides", "type": "Run", "detail": "4 mi easy with 4x20sec strides.", "duration": "30-35 min", "targets": "Legs should feel springy.", "rpe": "4", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest. Prep race gear.", "duration": "0 min", "targets": "Lay out kit. Charge watch. Check electrolyte supply.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Easy Walk", "type": "Recovery", "detail": "20-30 min flat walk. Light stretch.", "duration": "20-30 min", "targets": "Hydrate all day.", "rpe": "1-2", "cat": "r", "optional": false}]}, {"week": 13, "phase": "taper", "phaseLabel": "RACE WEEK", "title": "Spartan Beast \u2014 July 11", "dates": "Jul 06 - Jul 12, 2026", "focus": "Race prep", "days": [{"day": "Monday", "name": "Shakeout Run", "type": "Run", "detail": "3-4 mi easy flat with 4x15sec strides.", "duration": "25-30 min", "targets": "Keep blood flowing.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Tuesday", "name": "Light Full Body", "type": "Strength", "detail": "Back Squat 2x3 @65% (~170lb) superset Pull-ups 2x8, then 10 KB Swings (53lb) + Nordic Curls 3x6-8. Then go outside: 10 Wall Balls to finish.", "duration": "25 min", "targets": "Touch movements. Effortless.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Wednesday", "name": "Easy Run", "type": "Run", "detail": "3 mi flat easy.", "duration": "25 min", "targets": "Stay loose.", "rpe": "3", "cat": "r", "optional": false}, {"day": "Thursday", "name": "Off or Walk", "type": "Recovery", "detail": "Full rest or 20 min walk. Begin sodium loading: 1,500-2,000mg extra with dinner.", "duration": "0-20 min", "targets": "Sodium load begins.", "rpe": "1", "cat": "r", "optional": false}, {"day": "Friday", "name": "Off", "type": "Recovery", "detail": "Full rest. Pack race bag. Sodium loading: salty dinner + electrolyte drink before bed.", "duration": "0 min", "targets": "Everything laid out.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Saturday", "name": "SPARTAN BEAST", "type": "RACE DAY", "detail": "EXECUTE. HR cap 155 mi 1-4, cap 160 mi 5-7. Salt cap every 30-40 min. Fuel every 45 min. Don't skip aid stations. Negative split. Race hard mi 10-14.", "duration": "~4:00-4:30 goal", "targets": "Controlled first half. Strong second half. Cramp-proofed.", "rpe": "RACE", "cat": "R", "optional": false}, {"day": "Sunday", "name": "Recovery", "type": "Recovery", "detail": "Walk 15-20 min if possible. Foam roll gently. Eat well. Celebrate.", "duration": "15-20 min", "targets": "You crushed a Beast.", "rpe": "1", "cat": "r", "optional": false}]}, {"week": 14, "phase": "transition", "phaseLabel": "Transition", "title": "Recovery + Hyrox Intro", "dates": "Jul 13 - Jul 19, 2026", "focus": "Active recovery + Hyrox introduction", "days": [{"day": "Monday", "name": "Easy Run \u2014 Flat", "type": "Run", "detail": "4-5 mi easy flat. Assess post-race body. Walk if anything hurts.", "duration": "35-45 min", "targets": "Active recovery. Don't push through pain.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Tuesday", "name": "Light Full Body", "type": "Strength", "detail": "Goblet Squat 3x10 (53lb) + Push-ups 3x15 superset, then BW Lunges 2x10/leg + KB Swings 3x12 (53lb) superset. Rower 10 min easy. Dead hang 2x30sec.\nD1: Nordic Curls 3x6-8", "duration": "40-45 min", "targets": "Reintroduce movement. Light. Rower starts coming back.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Wednesday", "name": "Easy or Off", "type": "Recovery", "detail": "3-4 mi easy or full rest.", "duration": "0-35 min", "targets": "Listen to your body.", "rpe": "2-4", "cat": "r", "optional": false}, {"day": "Thursday", "name": "Hyrox Introduction", "type": "Circuit", "detail": "Nordic Curls 3x6 (do inside first)\nThen 3 rounds (easy): Rower 500m, 15 Wall Balls (20lb), 100m Walking Lunges (BW), 200m easy jog. Rest 2 min.", "duration": "35-40 min", "targets": "First taste of Hyrox format.", "rpe": "5", "cat": "h", "optional": false}, {"day": "Friday", "name": "Easy + Strides", "type": "Run", "detail": "5 mi easy with 6x20sec strides in last mile.", "duration": "40-45 min", "targets": "Strides wake up speed for Hyrox 1km repeats.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "Recovery.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk, foam roll, stretch.", "duration": "30 min", "targets": "Mentally shift to Hyrox.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 15, "phase": "hyrox-build", "phaseLabel": "Hyrox Build", "title": "Speed + Station Intro", "dates": "Jul 20 - Jul 26, 2026", "focus": "Running speed + station introduction", "days": [{"day": "Monday AM", "name": "1km Repeats \u2014 Intro", "type": "Run", "detail": "1.5 mi warmup, 6x1km at 4:45-5:00/km with 2 min jog, 1 mi cooldown. ~7 mi.", "duration": "60-65 min", "targets": "First Hyrox speed. Find 1km rhythm. Consistent splits.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: foam roll, hip flexors, dead bugs, pallof press, banded clamshells", "duration": "30 min", "targets": "Prehab.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat + Pull", "type": "Strength", "detail": "A1: Back Squat 4x4 @80% (~210lb) \u2014 straight sets, 2.5 min rest\n\nB1: Deadlift 4x4 @80% (~250lb)\nB2: Weighted Pull-ups 4x6 @70lb\n(Superset \u2014 2 min rest)\n\nC1: Bulgarian Split Squat 3x10/leg (53lb)\nC2: Pendlay Rows 4x6 @175lb\n(Superset \u2014 60sec rest)\n\nD1: Goblet Walking Lunge 3x20 steps (53lb)\nD2: Nordic Curls 3x6-8", "duration": "60-70 min", "targets": "Walking lunges prep for 100m station. Heavy swings.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Station Intro", "type": "Circuit", "detail": "3 rounds: Rower 1km, 30 Wall Balls (20lb), 100m Farmer Carry (2x53lb), 50m Walking Lunge (BW). Jog 400m between.", "duration": "45-55 min", "targets": "Technique and pacing. Find sustainable station pace.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Easy Run + Strides", "type": "Run", "detail": "30 min easy with 4x20sec strides", "duration": "30 min", "targets": "Extra volume + turnover.", "rpe": "4", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press + Posterior", "type": "Strength", "detail": "A1: Bench Press 4x4 @78% (~185lb) \u2014 straight sets, 2.5 min rest\n\nB1: Front Squat 3x4 @72% (~175lb)\nB2: Landmine Press 3x10/arm\n(Superset \u2014 2 min rest)\n\nC1: Farmer Carry 3x40m (88+72lb)\nC2: Weighted Pull-ups 3x5 @70lb\n(Superset \u2014 60sec rest)\n\nD1: DB Hammer Curls 3x10 (50lb)\nD2: Eccentric Calf Raises 3x15\n\nE1: Nordic Curls 3x6 (eccentric focus)", "duration": "60-70 min", "targets": "Deadlift on Thursday in Hyrox block. Double pull-up day.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Friday", "name": "Easy Aerobic", "type": "Run", "detail": "6-7 mi easy (~10:00/mi), flat, conversational.", "duration": "55-65 min", "targets": "Recovery. Under 140 HR.", "rpe": "4", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Easy or Off", "type": "Recovery", "detail": "Optional 30 min jog or rest.", "duration": "0-30 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + foam roll + easy rower 15 min.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 16, "phase": "hyrox-build", "phaseLabel": "Hyrox Build", "title": "Transition Practice", "dates": "Jul 27 - Aug 02, 2026", "focus": "Station-to-run transitions", "days": [{"day": "Monday AM", "name": "1km Repeats \u2014 Build", "type": "Run", "detail": "1.5 mi warmup, 7x1km at 4:40-4:50/km with 90sec jog, 1 mi cooldown. ~8 mi.", "duration": "65-70 min", "targets": "Tighter rest. Get comfortable being uncomfortable.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: foam roll, hip openers, dead bugs, bird dogs, side planks", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat + Pull", "type": "Strength", "detail": "A1: Back Squat 4x5 @78% (~205lb) \u2014 straight sets\n\nB1: Deadlift 4x4 @82% (~260lb)\nB2: Weighted Pull-ups 4x6 @70lb\n(Superset \u2014 2 min rest)\n\nC1: Bulgarian Split Squat 3x10/leg (53lb, 3-sec down, explosive up)\nC2: Landmine Rows 3x8/arm\n(Superset \u2014 60sec rest)\n\nD1: Barbell Walking Lunge 3x20 steps @95lb\nD2: Nordic Curls 2x8", "duration": "65-75 min", "targets": "BSS with tempo. Heavier barbell lunges.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Hyrox Transitions", "type": "Circuit", "detail": "5 rounds: 1km at race pace \u2192 immediately station (rotate: Wall Balls x25, Rower 500m, Farmer Carry 100m w/ 88+72lb, Lunges 50m w/ 2x53lb, Wall Balls x25). Minimal transition rest.", "duration": "55-65 min", "targets": "KEY: run-to-station transition is where Hyrox is won or lost.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Easy Run", "type": "Run", "detail": "25-30 min flat easy.", "duration": "25-30 min", "targets": "Skip if toast from AM.", "rpe": "3-4", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press + Power", "type": "Strength", "detail": "A1: Bench Press 4x4 @80% (~190lb) \u2014 straight sets\n\nB1: Front Squat 3x5 @70% (~170lb)\nB2: DB Incline Press 3x10 (70lb)\n(Superset \u2014 2 min rest)\n\nC1: Heavy KB Swings 4x15 (88lb)\nC2: Weighted Pull-ups 3x5 @70lb\n(Superset \u2014 90sec rest)\n\nD1: Nordic Curls 3x6 (eccentric focus)\nD2: Eccentric Calf Raises 2x15\n\nE1: Wall Balls 3x25 (20lb)", "duration": "60-70 min", "targets": "Wall ball volume climbing. Target: 100 unbroken race day.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Friday", "name": "Tempo Run", "type": "Run", "detail": "2 mi warmup, 4 mi tempo @7:00-7:15/mi, 1.5 mi cooldown. ~7.5 mi.", "duration": "60-65 min", "targets": "Sustained faster running.", "rpe": "7", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Easy or Off", "type": "Recovery", "detail": "Optional 30 min jog or rest.", "duration": "0-30 min", "targets": "Recovery.", "rpe": "2-3", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk, foam roll, easy rower.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 17, "phase": "hyrox-build", "phaseLabel": "Hyrox Build", "title": "Full Sim Building", "dates": "Aug 03 - Aug 09, 2026", "focus": "Build toward full simulation", "days": [{"day": "Monday AM", "name": "1km Repeats \u2014 Race Pace", "type": "Run", "detail": "1.5 mi warmup, 8x1km at 4:30-4:45/km with 90sec jog, 1 mi cooldown. ~8.5 mi.", "duration": "65-75 min", "targets": "Full 8 repeats at goal. Every split within 5 sec of each other.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: full mobility", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Heavy", "type": "Strength", "detail": "A1: Back Squat 4x3 @84% (~220lb) \u2014 straight sets, 3 min rest\n\nB1: Deadlift 3x4 @82% (~260lb)\nB2: Weighted Pull-ups 4x6 @70lb\n(Superset \u2014 2 min rest)\n\nC1: Bulgarian Split Squat 3x8/leg (72lb KB goblet)\nC2: Pendlay Rows 4x5 @185lb\n(Superset \u2014 60sec rest)\n\nD1: DB Step-ups 3x8/leg (60lb DBs)\nD2: Nordic Curls 3x6-8", "duration": "60-70 min", "targets": "Heaviest squats of Hyrox build. BSS with 72lb.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Half Hyrox Sim", "type": "Circuit", "detail": "4 rounds: 1km at race pace \u2192 station. (1) Rower 1km, (2) Wall Balls 50, (3) Farmer Carry 200m (88+72lb), (4) Lunges 100m (2x53lb). Log every split.", "duration": "60-70 min", "targets": "First real benchmark. Time everything.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Wednesday PM", "name": "Easy Run", "type": "Run", "detail": "25-30 min easy if feeling good.", "duration": "25-30 min", "targets": "Only if AM went well.", "rpe": "3-4", "cat": "r", "optional": true}, {"day": "Thursday", "name": "Full Body \u2014 Press + Row Test", "type": "Strength", "detail": "A1: Bench Press 4x3 @82% (~195lb) \u2014 straight sets\n\nB1: Front Squat 3x3 @76% (~190lb)\nB2: Weighted Pull-ups 4x6 @70lb\n(Superset \u2014 2 min rest)\n\nC1: Heavy KB Swings 4x15 (88lb)\nC2: Landmine Press 3x8/arm\n(Superset \u2014 90sec rest)\n\nD1: Rower 2km time trial (BENCHMARK)\nD2: Nordic Curls 3x6 (eccentric focus)", "duration": "65-75 min", "targets": "2km row benchmark. Heavy posterior chain work.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Friday", "name": "Easy + Strides", "type": "Run", "detail": "6 mi easy with 6x20sec strides.", "duration": "50-55 min", "targets": "Recovery with neuromuscular work.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest. Log benchmarks.", "duration": "0 min", "targets": "Recovery.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + foam roll.", "duration": "30 min", "targets": "Recovery before deload.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 18, "phase": "hyrox-build", "phaseLabel": "Hyrox Build", "title": "DELOAD + BENCHMARK", "dates": "Aug 10 - Aug 16, 2026", "focus": "Recovery + benchmark testing", "days": [{"day": "Monday AM", "name": "Easy Long Run", "type": "Run", "detail": "7-8 mi easy, flat, conversational.", "duration": "1:05-1:15", "targets": "Reduced volume.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Monday PM", "name": "Mobility", "type": "Recovery", "detail": "30 min: full foam roll + stretch", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Light", "type": "Strength", "detail": "A1: Back Squat 3x4 @72% (~190lb)\n\nB1: Light RDL 3x6 @155lb\nB2: Pull-ups 3x8 (BW)\n(Superset)\n\nC1: Bulgarian Split Squat 2x8/leg (30lb)\nC2: Light KB Swings 3x10 (53lb)\nD1: Nordic Curls 3x6-8", "duration": "40-45 min", "targets": "Touch patterns.", "rpe": "5", "cat": "r", "optional": false}, {"day": "Wednesday", "name": "Station Benchmarks", "type": "Testing", "detail": "Rower 1km TT. Rest 5 min. Wall Balls max unbroken. Rest 5 min. Farmer Carry 200m timed (88+72lb). Rest 5 min. Lunges 100m timed (2x53lb).", "duration": "40-50 min", "targets": "BENCHMARK: Record all times and counts.", "rpe": "Varies", "cat": "h", "optional": false}, {"day": "Thursday", "name": "5K Time Trial", "type": "Run", "detail": "1.5 mi warmup, 5K all-out, 1 mi cooldown.", "duration": "35-45 min", "targets": "BENCHMARK: 5K time.", "rpe": "10", "cat": "h", "optional": false}, {"day": "Friday", "name": "Full Body \u2014 Light", "type": "Strength", "detail": "Bench 2x4 @72% (~170lb), Weighted Pull-ups 3x5 @50lb, light rows. Easy.\nNordic Curls 3x6 (eccentric focus)", "duration": "35-40 min", "targets": "Maintenance.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "Review benchmarks.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk, stretch, easy rower.", "duration": "30 min", "targets": "Prep for peak volume.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 19, "phase": "hyrox-build", "phaseLabel": "Hyrox Build", "title": "Peak Volume", "dates": "Aug 17 - Aug 23, 2026", "focus": "Highest Hyrox training volume", "days": [{"day": "Monday AM", "name": "1km Repeats \u2014 Peak", "type": "Run", "detail": "1.5 mi warmup, 8x1km at 4:25-4:40/km (faster than goal), 90sec jog, 1 mi cooldown. ~8.5 mi.", "duration": "65-75 min", "targets": "Fastest 1km session. Race day at 4:30-4:45 will feel manageable.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: full session", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Squat Power", "type": "Strength", "detail": "A1: Back Squat 4x3 @84% (~220lb) \u2014 straight sets, 3 min rest\n\nB1: Romanian DL 4x6 @195lb (4-sec eccentric)\nB2: Weighted Pull-ups 4x5 @75lb\n(Superset \u2014 2 min rest)\n\nC1: Bulgarian Split Squat 3x8/leg (72lb KB)\nC2: Barbell Rows 4x5 @185lb\n(Superset \u2014 60sec rest)\n\nD1: Barbell Walking Lunge 3x20 steps @105lb\nD2: Nordic Curls 3x6-8", "duration": "60-70 min", "targets": "Heaviest lunges ever. Squats at peak loads.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "FULL HYROX SIM", "type": "Circuit", "detail": "8 rounds: 1km + station. (1) Row 1km, (2) Wall Balls 100, (3) Farmer Carry 200m (88+72lb), (4) Lunges 100m (2x53lb), (5) Row 1km, (6) Burpee Broad Jumps 80m, (7) Goblet Carry 200m (72lb), (8) Wall Balls 100. TIME EVERYTHING.", "duration": "80-100 min", "targets": "THE session. Full sim at race effort.", "rpe": "9", "cat": "h", "optional": false}, {"day": "Thursday", "name": "Easy Recovery", "type": "Run", "detail": "5-6 mi very easy. Walk breaks fine.", "duration": "45-55 min", "targets": "Recovery from sim. Under 135 HR.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Friday", "name": "Full Body \u2014 Pull + Posterior", "type": "Strength", "detail": "A1: Deadlift 4x3 @84% (~265lb) \u2014 straight sets, 3 min rest\n\nB1: Weighted Pull-ups 4x5 @75lb\nB2: Heavy KB Swings 5x12 (88lb)\n(Superset \u2014 2 min rest)\n\nC1: Bench Press 3x4 @78% (~185lb)\nC2: Landmine RDL 3x8\n(Superset \u2014 90sec rest)\n\nD1: Nordic Curls 3x6 (eccentric focus)\nD2: Wall Balls 2x30 (practice big sets)", "duration": "60-70 min", "targets": "Push pull-up weight. Wall ball sets of 30+.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "Hardest week done.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk, full mobility, easy rower.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 20, "phase": "hyrox-peak", "phaseLabel": "Hyrox Peak", "title": "Race-Pace Specificity", "dates": "Aug 24 - Aug 30, 2026", "focus": "Race-pace specificity", "days": [{"day": "Monday AM", "name": "1km Repeats \u2014 Race Sim", "type": "Run", "detail": "1.5 mi warmup, 8x1km at goal (4:30-4:45/km), 90sec jog. Between reps 4-5, do 25 Wall Balls then resume. 1 mi cooldown.", "duration": "70-80 min", "targets": "Station fatigue mid-race sim. Hold pace after wall balls.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility + Core", "type": "Recovery", "detail": "30 min: full mobility", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Race Weight", "type": "Strength", "detail": "A1: Back Squat 3x3 @82% (~215lb) \u2014 straight sets\n\nB1: Romanian DL 3x5 @190lb (4-sec eccentric)\nB2: Weighted Pull-ups 3x5 @78lb\n(Superset \u2014 90sec rest)\n\nC1: Bulgarian Split Squat 3x8/leg (53lb, explosive)\nC2: Pendlay Rows 3x5 @185lb\n(Superset)\n\nD1: Walking Lunges 2x20 steps (2x53lb) \u2014 TIMED at race pace\nD2: Nordic Curls 3x6-8", "duration": "55-60 min", "targets": "Time your 100m lunge. Set race-day target.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Race-Pace Stations", "type": "Circuit", "detail": "4 rounds: 1km \u2192 station. (1) Rower 1km, (2) Wall Balls 50 (break: 25-15-10), (3) Farmer Carry 200m (88+72lb), (4) Lunges 100m (2x53lb). FAST transitions.", "duration": "55-65 min", "targets": "Half sim full race pace. Practice wall ball break strategy.", "rpe": "8-9", "cat": "h", "optional": false}, {"day": "Thursday", "name": "Easy Run", "type": "Run", "detail": "5-6 mi easy, flat.", "duration": "45-55 min", "targets": "Under 140 HR.", "rpe": "4", "cat": "r", "optional": false}, {"day": "Friday", "name": "Full Body \u2014 Sharp", "type": "Strength", "detail": "A1: Bench Press 3x3 @80% (~190lb) \u2014 straight sets\n\nB1: Deadlift 3x3 @82% (~260lb)\nB2: Weighted Pull-ups 3x4 @78lb\n(Superset \u2014 2 min rest)\n\nC1: KB Swings 3x15 (88lb)\nC2: Rower 4x500m hard (target sub-1:45/500m, 90sec rest)\n(Alternating)\nNordic Curls 3x6 (eccentric focus)", "duration": "55-65 min", "targets": "Rower intervals at race intensity.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "Recovery.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk, foam roll, easy rower.", "duration": "30 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 21, "phase": "hyrox-peak", "phaseLabel": "Hyrox Peak", "title": "Final Sharpening", "dates": "Aug 31 - Sep 06, 2026", "focus": "Last hard week", "days": [{"day": "Monday AM", "name": "1km Repeats \u2014 Confidence", "type": "Run", "detail": "1.5 mi warmup, 6x1km at 4:20-4:35/km with 2 min jog, 1 mi cooldown. ~7 mi.", "duration": "55-65 min", "targets": "Fewer reps, slightly fast. Sharp and controlled.", "rpe": "8", "cat": "h", "optional": false}, {"day": "Monday PM", "name": "Mobility", "type": "Recovery", "detail": "25 min: foam roll, stretch, light core", "duration": "25 min", "targets": "Recovery.", "rpe": "2", "cat": "r", "optional": true}, {"day": "Tuesday", "name": "Full Body \u2014 Reduced", "type": "Strength", "detail": "A1: Back Squat 3x3 @78% (~205lb)\n\nB1: Romanian DL 3x5 @175lb\nB2: Weighted Pull-ups 3x5 @65lb\n(Superset)\n\nC1: Bulgarian Split Squat 2x8/leg (53lb)\nC2: Light Rows 2x8\n(Superset)\n\nD1: Walking Lunges 1x20 steps at race weight\nD2: Nordic Curls 3x6-8", "duration": "45-50 min", "targets": "Last meaningful strength session. Reduced volume.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Wednesday", "name": "Short Sharpener", "type": "Circuit", "detail": "3 rounds: 1km at race pace \u2192 (1) Wall Balls 30, (2) Rower 500m, (3) Farmer Carry 100m (88+72lb). Fast transitions.", "duration": "35-45 min", "targets": "Last station session. Short and sharp.", "rpe": "7-8", "cat": "h", "optional": false}, {"day": "Thursday", "name": "Easy + Strides", "type": "Run", "detail": "5 mi easy with 6x20sec strides.", "duration": "40-45 min", "targets": "Keep speed dialed in.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Friday", "name": "Full Body \u2014 Light", "type": "Strength", "detail": "A1: Bench Press 2x3 @75% (~175lb)\nB1: Pull-ups 3x8 (BW)\nB2: Light KB Swings 3x10 (53lb)\n(Superset)\nC1: Farmer Carry 2x30m (2x53lb)\nC2: Eccentric Calf Raises 2x12\nNordic Curls 3x6 (eccentric focus)", "duration": "35-40 min", "targets": "Last gym session. Light and crisp.", "rpe": "5-6", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest.", "duration": "0 min", "targets": "Enjoy.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Active Recovery", "type": "Recovery", "detail": "Walk + stretch.", "duration": "25 min", "targets": "Taper mode.", "rpe": "2", "cat": "r", "optional": false}]}, {"week": 22, "phase": "hyrox-taper", "phaseLabel": "Hyrox Taper", "title": "Volume Cut", "dates": "Sep 07 - Sep 13, 2026", "focus": "Volume cut, keep edge", "days": [{"day": "Monday", "name": "Easy + Pickups", "type": "Run", "detail": "6 mi: easy with 4x2min at Hyrox 1km pace scattered through. Walk 1 min between.", "duration": "50-55 min", "targets": "Stay sharp without fatigue.", "rpe": "5-6", "cat": "h", "optional": false}, {"day": "Tuesday", "name": "Full Body \u2014 Light Touch", "type": "Strength", "detail": "Back Squat 2x3 @72% (~190lb) + Pull-ups 2x8 superset. Then BSS 2x6/leg (30lb) + 10 KB Swings (53lb) superset. Nordic Curls 3x6-8. Then go outside: 10 Wall Balls to finish.", "duration": "30-35 min", "targets": "Touch everything. Done in 30 min.", "rpe": "4-5", "cat": "r", "optional": false}, {"day": "Wednesday", "name": "Short Race-Pace", "type": "Run + Circuit", "detail": "1.5 mi warmup, 2x1km at race pace, 2 min jog, 15 Wall Balls between, 1 mi cooldown. ~4.5 mi.", "duration": "35-40 min", "targets": "Last race-pace work. Should feel easy.", "rpe": "6-7", "cat": "h", "optional": false}, {"day": "Thursday", "name": "Easy Run", "type": "Run", "detail": "4 mi flat easy.", "duration": "35 min", "targets": "Under 135 HR.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Friday", "name": "Off or Mobility", "type": "Recovery", "detail": "Rest or 20 min foam roll + stretch.", "duration": "0-20 min", "targets": "Race logistics.", "rpe": "1-2", "cat": "r", "optional": false}, {"day": "Saturday", "name": "Off", "type": "Recovery", "detail": "Full rest. Prep gear.", "duration": "0 min", "targets": "Prep gear.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Sunday", "name": "Easy Walk", "type": "Recovery", "detail": "20-30 min walk. Light stretch.", "duration": "20-30 min", "targets": "Hydrate.", "rpe": "1-2", "cat": "r", "optional": false}]}, {"week": 23, "phase": "hyrox-taper", "phaseLabel": "RACE WEEK", "title": "Hyrox \u2014 ~Sept 20", "dates": "Sep 14 - Sep 20, 2026", "focus": "Race prep", "days": [{"day": "Monday", "name": "Shakeout Run", "type": "Run", "detail": "3-4 mi easy flat with 4x15sec strides.", "duration": "25-30 min", "targets": "Keep blood flowing.", "rpe": "3-4", "cat": "r", "optional": false}, {"day": "Tuesday", "name": "Light Station Touch", "type": "Circuit", "detail": "Nordic Curls 3x6-8 (do inside first)\nThen 2 rounds (very easy): Rower 500m, 10 Wall Balls, 50m Farmer Carry (2x53lb), 50m Lunge (BW). Done in 15-20 min.", "duration": "20 min", "targets": "Touch movements. Extremely light.", "rpe": "3", "cat": "r", "optional": false}, {"day": "Wednesday", "name": "Easy Run", "type": "Run", "detail": "3 mi flat easy.", "duration": "25 min", "targets": "Stay loose.", "rpe": "3", "cat": "r", "optional": false}, {"day": "Thursday", "name": "Off or Walk", "type": "Recovery", "detail": "Full rest or 20 min walk.", "duration": "0-20 min", "targets": "Eat well. Hydrate.", "rpe": "1", "cat": "r", "optional": false}, {"day": "Friday", "name": "Off", "type": "Recovery", "detail": "Full rest. Pack bag. Plan nutrition.", "duration": "0 min", "targets": "Know your pacing plan.", "rpe": "0", "cat": "r", "optional": false}, {"day": "Saturday", "name": "HYROX \u2014 Salt Lake City", "type": "RACE DAY", "detail": "EXECUTE. 1km: 4:30-4:45. Rower: 1:50-1:55/500m. Wall Balls: 25-15-10 or 30-20. Farmer Carry: unbroken. Lunges: steady. FAST transitions. Control first 4, push last 4.", "duration": "~65-75 min goal", "targets": "Trust the training. Negative split.", "rpe": "RACE", "cat": "R", "optional": false}, {"day": "Sunday", "name": "Recovery + Celebrate", "type": "Recovery", "detail": "Walk 15-20 min. Foam roll. Eat well. You're done.", "duration": "15-20 min", "targets": "Two races. Two strong finishes.", "rpe": "1", "cat": "r", "optional": false}]}];
+// Pre-populated notes
+const DEFAULT_NOTES = {
+  "w1_2": "Back Squat: 1x6 @45lb, 1x6 @135lb, 4x6 @185lb ✓\nNordic Curls: 4 sets (eccentric) ✓\nRan out of time — skipped B/C supersets\nHad hamstring cramps later in the day — good sign, eccentrics are hitting the right tissue",
+  "w1_3": "5.04 mi — 8:24/mi avg — ~270ft elevation\nTextbook negative split: 9:31 → 8:26 → 8:04 → 8:00 → 7:57\nAvg HR 157 / Max 177 — 47% in Z3, 0% in Z5\n6 strides at the end:\n  #1: 5:40/mi peak, 173 HR, 190 cad\n  #2: 4:38/mi peak, 172 HR, 200 cad\n  #3: 4:34/mi peak, 170 HR, 196 cad\n  #4: 4:57/mi peak, 170 HR, 196 cad\n  #5: 5:12/mi peak, 168 HR, 192 cad\n  #6: 4:31/mi peak, 167 HR, 200 cad\nHR dropped across strides while pace held — great sign\nFelt surprisingly good despite soreness from Mon/Tue",
+  "w1_4": "Skipped — worked late",
+  "w1_5": "Skipped — worked late",
+  "w1_6": "Fartlek on hills (moved from Friday due to schedule)\n6.66 mi — 9:04/mi avg — ~530ft elevation\n9 rounds of 2min ON / 2min OFF after ~2mi warmup\nFlat surges: 7:08–7:52/mi at HR 148–163\nSteep hill surges: 9:12–10:45/mi with 128–131ft gain per rep (power hike)\nLast 4 rounds were strongest — 7:08–7:24/mi at steady 162–163 HR\nNegative split pattern again — finishing stronger than starting",
+  "w2_0": "Short due to airport run for father-in-law\n2.82 mi — 8:12/mi avg — ~165ft elevation\nNegative split: 9:38 → 7:58 → 6:44\nAvg HR 142 / Max 179\nMissed downhill volume — fold into Wed cooldown or next Monday",
+  "w2_2": "Shifted from Tuesday to Wednesday due to schedule",
+  "w2_3": "Hill Repeats (shifted from Wed to Thursday)\n5.29 mi — 9:09/mi avg — ~354ft elevation\nLong warmup hill first 2mi, then 5x90-110sec hard uphill:\n  #1: 108sec, 7:24/mi, HR 158/162, +50ft\n  #2: 84sec, 7:31/mi, HR 151/153, +43ft\n  #3: 77sec, 7:09/mi, HR 154/160, +42ft\n  #4: 140sec, 8:21/mi, HR 165/184, +49ft\n  #5: 147sec, 8:36/mi, HR 156/172, +44ft\nFirst 3 reps strong and controlled, reps 4-5 longer efforts with higher HR\nPlan called for 6x60sec — did 5x90-110sec instead (more total work)",
+  "w3_0": "7.13 mi — 9:59/mi avg — 581ft elevation\nPlan called for 10-11mi with carry — shorter but solid elevation",
+  "w3_2": "Completed full session ✓\nBack Squat 4x5 @205lb ✓\nFront Squat 3x5 @155lb (plan said 175 — adjusted down)\nWeighted Pull-ups 4x5 @53lb (plan said 25lb — went heavier, nice)\nBulgarian Split Squat 3x10/leg @53lb KBs ✓\nDB Rows 3x10/arm @70lb (subbed for Pendlay Rows)\nNordic Curls 3x6 ✓\nLandmine Press 3x8/arm ✓\nFirst time completing the full Tuesday session",
+  "w3_3": "Hill Repeats — 6.82 mi — 9:19/mi avg — 760ft gain\n8 repeats (100-120sec each) after 2mi warmup climb:\n  #1: 106sec, 8:28/mi, HR 149/152, +75ft\n  #2: 116sec, 8:50/mi, HR 152/159, +68ft\n  #3: 114sec, 8:39/mi, HR 154/159, +70ft\n  #4: 121sec, 8:59/mi, HR 152/156, +75ft\n  #5: 111sec, 8:10/mi, HR 152/160, +68ft\n  #6: 103sec, 8:05/mi, HR 149/153, +68ft\n  #7: 105sec, 7:36/mi, HR 148/159, +72ft\n  #8: 102sec, 7:43/mi, HR 150/158, +63ft\nNegative split on hills — last 2 reps fastest at same HR\n8 reps vs plan's 8x75sec — longer efforts, more volume\nBig improvement over Wk 2 (5 reps, slower, higher HR)",
+  "w3_5": "Modified Thursday — legs sore from Tue front squats + Wed hills\nBench Press 4x5 @185lb — hard on reps 4-5 each set (RPE ~8)\nLandmine Press 10 reps @25lb x4 rounds\nRDL w/ 88lb DB x10 x4 rounds\nFarmer Carry 60m @88+72lb (160lb total) x4 rounds\nWeighted Pull-ups 4x5 @60lb — felt good, could have done 7-8/set\nSkipped goblet squats (legs too sore from Tue+Wed)\nSkipped calf raises\nSkipped Nordics — weren't listed (NOW FIXED for all Thursdays)\nNote: front squats now moved to Thursday going forward"
+};
+
+let currentWeek = 0;
+let completed = {};
+let notes = {};
+try { completed = JSON.parse(localStorage.getItem('tp_completed') || '{}'); } catch(e) { completed = {}; }
+try { notes = JSON.parse(localStorage.getItem('tp_notes') || '{}'); } catch(e) { notes = {}; }
+
+// Seed default notes if not already overwritten
+Object.keys(DEFAULT_NOTES).forEach(k => {
+  if (!(k in notes)) notes[k] = DEFAULT_NOTES[k];
+});
+try { localStorage.setItem('tp_notes', JSON.stringify(notes)); } catch(e) {}
+
+// Also seed completions for those days
+if (!('w1_2' in completed)) { completed['w1_2'] = true; }
+if (!('w1_3' in completed)) { completed['w1_3'] = true; }
+if (!('w1_6' in completed)) { completed['w1_6'] = true; }
+if (!('w2_0' in completed)) { completed['w2_0'] = true; }
+if (!('w2_3' in completed)) { completed['w2_3'] = true; }
+if (!('w3_0' in completed)) { completed['w3_0'] = true; }
+if (!('w3_2' in completed)) { completed['w3_2'] = true; }
+if (!('w3_3' in completed)) { completed['w3_3'] = true; }
+if (!('w3_4' in completed)) { completed['w3_4'] = true; }
+try { localStorage.setItem('tp_completed', JSON.stringify(completed)); } catch(e) {}
+
+let currentView = 'weekView';
+let editingNote = null;
+const today = new Date();
+const planStart = new Date(2026, 3, 13);
+const weeksSinceStart = Math.floor((today - planStart) / (7*24*60*60*1000));
+if (weeksSinceStart >= 0 && weeksSinceStart < WEEKS.length) currentWeek = weeksSinceStart;
+
+const tabDefs = [{id:'weekView',label:'Training'},{id:'crampView',label:'Anti-Cramp'},{id:'benchView',label:'Benchmarks'},{id:'equipView',label:'Equipment'}];
+
+function initTabs(){
+  const c=document.getElementById('tabs');
+  tabDefs.forEach(t=>{const b=document.createElement('button');b.className='tab'+(t.id===currentView?' active':'');b.textContent=t.label;b.onclick=()=>switchView(t.id);c.appendChild(b)});
+}
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById(v).classList.add('active');
+  document.querySelectorAll('.tab').forEach((t,i)=>t.className='tab'+(tabDefs[i].id===v?' active':''));
+}
+function initPhaseBar(){
+  const bar=document.getElementById('phaseBar');
+  WEEKS.forEach((w,i)=>{const s=document.createElement('div');s.className=`phase-seg ${w.phase}`;s.title=`Wk ${w.week}: ${w.phaseLabel}`;s.onclick=()=>{currentWeek=i;render()};bar.appendChild(s)});
+}
+function updatePhaseBar(){
+  document.querySelectorAll('.phase-seg').forEach((s,i)=>{s.classList.toggle('active-week',i===currentWeek)});
+}
+
+function formatWorkout(detail, type) {
+  if (type === 'Recovery' || type === 'Run' || type === 'Testing' || type === 'RACE DAY') {
+    return `<div class="run-detail">${detail.replace(/\n/g,'<br>')}</div>`;
+  }
+  
+  const lines = detail.split('\n').filter(l => l.trim());
+  let html = '';
+  let currentBlock = null;
+  let blockLines = [];
+  let blockType = 'main-lift';
+  let blockLabel = 'MAIN LIFT';
+  let labelClass = 'main';
+  
+  function flushBlock() {
+    if (blockLines.length === 0) return;
+    html += `<div class="workout-block ${blockType}">`;
+    html += `<div class="block-label ${labelClass}">${blockLabel}</div>`;
+    blockLines.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('(') && trimmed.endsWith(')')) {
+        html += `<div class="block-note">${trimmed.slice(1,-1)}</div>`;
+      } else {
+        html += `<div class="exercise-line"><span class="ex-name">${trimmed}</span></div>`;
+      }
+    });
+    html += '</div>';
+    blockLines = [];
+  }
+  
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    
+    if (trimmed.match(/^A1:/)) {
+      flushBlock();
+      blockType = 'main-lift'; blockLabel = 'MAIN LIFT'; labelClass = 'main';
+      blockLines.push(trimmed.replace(/^A1:\s*/, ''));
+    } else if (trimmed.match(/^B1:/)) {
+      flushBlock();
+      blockType = 'superset'; blockLabel = 'SUPERSET B'; labelClass = 'ss';
+      blockLines.push(trimmed.replace(/^B1:\s*/, ''));
+    } else if (trimmed.match(/^B2:/)) {
+      blockLines.push(trimmed.replace(/^B2:\s*/, ''));
+    } else if (trimmed.match(/^C1:/)) {
+      flushBlock();
+      blockType = 'superset'; blockLabel = 'SUPERSET C'; labelClass = 'ss';
+      blockLines.push(trimmed.replace(/^C1:\s*/, ''));
+    } else if (trimmed.match(/^C2:/)) {
+      blockLines.push(trimmed.replace(/^C2:\s*/, ''));
+    } else if (trimmed.match(/^D1:/)) {
+      flushBlock();
+      blockType = 'finisher'; blockLabel = 'FINISHER'; labelClass = 'fin';
+      blockLines.push(trimmed.replace(/^D1:\s*/, ''));
+    } else if (trimmed.match(/^D2:/)) {
+      blockLines.push(trimmed.replace(/^D2:\s*/, ''));
+    } else if (trimmed.startsWith('(')) {
+      blockLines.push(trimmed);
+    } else {
+      if (html === '' && blockLines.length === 0) {
+        blockType = 'main-lift'; blockLabel = 'MAIN LIFT'; labelClass = 'main';
+      }
+      blockLines.push(trimmed);
+    }
+  });
+  flushBlock();
+  
+  if (!html) {
+    return `<div class="run-detail">${detail.replace(/\n/g,'<br>')}</div>`;
+  }
+  return html;
+}
+
+function formatRunCircuit(detail) {
+  const parts = detail.split(/(?:PM:|PM or after:|After:)/i);
+  if (parts.length === 1) {
+    const ampm = detail.split(/(?:AM:|PM:)/i);
+    if (ampm.length > 1) {
+      let html = '<div class="workout-block main-lift"><div class="block-label main">AM SESSION</div>';
+      html += `<div class="run-detail">${ampm[0].replace('AM:','').trim()}</div></div>`;
+      html += '<div class="workout-block superset"><div class="block-label ss">PM SESSION</div>';
+      html += `<div class="run-detail">${ampm.slice(1).join('').trim()}</div></div>`;
+      return html;
+    }
+  }
+  // Try splitting on "AM:" and "PM:" within the string
+  const amMatch = detail.match(/AM:\s*([\s\S]*?)(?=\s*PM:)/i);
+  const pmMatch = detail.match(/PM:\s*([\s\S]*?)$/i);
+  if (amMatch && pmMatch) {
+    let html = '<div class="workout-block main-lift"><div class="block-label main">AM SESSION</div>';
+    html += `<div class="run-detail">${amMatch[1].trim()}</div></div>`;
+    html += '<div class="workout-block superset"><div class="block-label ss">PM SESSION</div>';
+    html += `<div class="run-detail">${pmMatch[1].trim()}</div></div>`;
+    return html;
+  }
+  return `<div class="run-detail">${detail.replace(/\n/g,'<br>')}</div>`;
+}
+
+function getPreRunActivation(dayType, dayName) {
+  // Show on run days and run+circuit days, but not recovery/rest/off days
+  const isRun = dayType === 'Run' || dayType === 'Run + Circuit';
+  const isEasyOff = dayName.toLowerCase().includes('off') || dayName.toLowerCase().includes('recovery') || dayName.toLowerCase().includes('shakeout');
+  if (!isRun || isEasyOff) return '';
+
+  const isHilly = dayName.toLowerCase().includes('hill') || dayName.toLowerCase().includes('trail') || dayName.toLowerCase().includes('fartlek');
+
+  let html = '<div class="warmup-block" id="warmup_' + Math.random().toString(36).slice(2) + '" onclick="this.classList.toggle(\'expanded\')">';
+  html += '<div class="block-label">PRE-RUN ACTIVATION — 5 MIN <span class="warmup-toggle">tap to expand</span></div>';
+  html += '<div class="warmup-details">';
+  html += '<div class="warmup-exercise"><strong>Banded Monster Walks</strong> — 15 steps each direction</div>';
+  html += '<div class="warmup-exercise"><strong>Banded Clamshells</strong> — 15 per side</div>';
+  html += '<div class="warmup-exercise"><strong>Single-Leg Glute Bridges</strong> — 10 per side</div>';
+  if (isHilly) {
+    html += '<div class="warmup-exercise"><strong>Leg Swings</strong> — 10 front-to-back + 10 lateral per side</div>';
+    html += '<div class="warmup-exercise" style="color:var(--text3);font-style:italic;margin-top:4px">Extra important before hill sessions — wakes up glute med so piriformis doesn\'t take over</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function startEditNote(id) {
+  editingNote = id;
+  render();
+  const textarea = document.getElementById(`note_input_${id}`);
+  if (textarea) textarea.focus();
+}
+
+function saveNote(id) {
+  const textarea = document.getElementById(`note_input_${id}`);
+  if (textarea) {
+    const val = textarea.value.trim();
+    if (val) {
+      notes[id] = val;
+    } else {
+      delete notes[id];
+    }
+    try { localStorage.setItem('tp_notes', JSON.stringify(notes)); } catch(e) {}
+  }
+  editingNote = null;
+  render();
+}
+
+function cancelNote(id) {
+  editingNote = null;
+  render();
+}
+
+function render(){
+  const w=WEEKS[currentWeek];
+  document.getElementById('weekTitle').innerHTML=`Week ${w.week} <span class="phase-tag ${w.phase}">${w.phaseLabel}</span>`;
+  document.getElementById('weekDates').textContent=`${w.dates} — ${w.title}`;
+  const key=`w${w.week}`;
+  const total=w.days.filter(d=>!d.optional).length;
+  const done=w.days.filter((d,i)=>!d.optional&&completed[`${key}_${i}`]).length;
+  document.getElementById('weekProgress').innerHTML=`<span class="done">${done}</span> / ${total} sessions`;
+  document.getElementById('prevWeek').disabled=currentWeek===0;
+  document.getElementById('nextWeek').disabled=currentWeek===WEEKS.length-1;
+
+  const container=document.getElementById('dayCards');
+  container.innerHTML='';
+  
+  w.days.forEach((day,i)=>{
+    const id=`${key}_${i}`;
+    const isComplete=!!completed[id];
+    const isRest=day.cat==='r';
+    const isRace=day.cat==='R';
+    const isHard=!isRest&&!isRace&&!day.optional;
+    const rpeNum=parseFloat(day.rpe);
+    let rpeClass='rpe-low';
+    if(rpeNum>=8||day.rpe==='RACE'||day.rpe==='9'||day.rpe==='10')rpeClass='rpe-high';
+    else if(rpeNum>=6)rpeClass='rpe-med';
+    
+    const card=document.createElement('div');
+    let classes='day-card';
+    if(isComplete)classes+=' completed';
+    if(isRace)classes+=' race-day';
+    else if(isRest)classes+=' rest-day';
+    else if(isHard)classes+=' hard-day';
+    if(day.optional)classes+=' optional';
+    card.className=classes;
+    card.id=`card_${id}`;
+    
+    const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const dayBase=day.day.split(' ')[0];
+    const isToday=(weeksSinceStart===currentWeek)&&dayNames[today.getDay()]===dayBase;
+    const hasNote = !!notes[id];
+    
+    let formattedDetail = getPreRunActivation(day.type, day.name);
+    if (day.type === 'Strength' || day.type === 'Testing') {
+      formattedDetail += formatWorkout(day.detail, day.type);
+    } else if (day.type === 'Run + Circuit') {
+      formattedDetail += formatRunCircuit(day.detail);
+    } else {
+      formattedDetail += formatWorkout(day.detail, day.type);
+    }
+    
+    // Build notes section
+    let notesHtml = '<div class="notes-section">';
+    notesHtml += '<div class="notes-label" onclick="event.stopPropagation();startEditNote(\'' + id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> NOTES</div>';
+    
+    if (editingNote === id) {
+      notesHtml += `<textarea class="notes-input" id="note_input_${id}">${notes[id] || ''}</textarea>`;
+      notesHtml += `<div class="notes-actions"><button class="btn-cancel" onclick="event.stopPropagation();cancelNote('${id}')">Cancel</button><button class="btn-save" onclick="event.stopPropagation();saveNote('${id}')">Save</button></div>`;
+    } else if (hasNote) {
+      const escapedNote = notes[id].replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+      notesHtml += `<div class="notes-display" onclick="event.stopPropagation();startEditNote('${id}')">${escapedNote}</div>`;
+    } else {
+      notesHtml += `<div class="notes-display" onclick="event.stopPropagation();startEditNote('${id}')"></div>`;
+    }
+    notesHtml += '</div>';
+    
+    card.innerHTML=`
+      <div class="day-main" onclick="toggleExpand('${id}')">
+        <div class="day-check" onclick="event.stopPropagation();toggleComplete('${id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div class="day-content">
+          <div class="day-top">
+            <span class="day-name">${day.day}</span>
+            ${isToday?'<span class="today-indicator">TODAY</span>':''}
+            ${day.optional?'<span style="font-size:.7rem;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:4px">Optional</span>':''}
+            ${hasNote?'<span class="has-notes-indicator" title="Has notes"></span>':''}
+          </div>
+          <div class="day-type">${day.name}</div>
+          <div class="day-meta">
+            <span>${day.type}</span>
+            <span>${day.duration}</span>
+            <span class="rpe-badge ${rpeClass}">RPE ${day.rpe}</span>
+          </div>
+        </div>
+      </div>
+      <div class="day-expand">
+        ${formattedDetail}
+        <div class="detail-section">
+          <div class="detail-label">Targets</div>
+          <div class="detail-text">${day.targets}</div>
+        </div>
+        ${notesHtml}
+      </div>`;
+    container.appendChild(card);
+  });
+  updatePhaseBar();
+}
+
+function toggleComplete(id){if(completed[id])delete completed[id];else completed[id]=true;try{localStorage.setItem('tp_completed',JSON.stringify(completed))}catch(e){};render()}
+function toggleExpand(id){document.getElementById(`card_${id}`).classList.toggle('expanded')}
+function changeWeek(d){currentWeek=Math.max(0,Math.min(WEEKS.length-1,currentWeek+d));render()}
+document.addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA')return;if(e.key==='ArrowLeft')changeWeek(-1);if(e.key==='ArrowRight')changeWeek(1)});
+
+initTabs();initPhaseBar();render();
+</script>
+</body>
+</html>
